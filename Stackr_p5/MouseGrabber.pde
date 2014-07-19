@@ -52,9 +52,7 @@ class MouseGrabber
   {
     if ( null != mMouseJoint ) {
       Body body = mMouseJoint.getBodyB();
-      float angle = body.getAngle();
-      angle += amount;
-      body.setTransform(body.getPosition(), angle);
+      body.setAngularVelocity(body.getAngularVelocity()+amount);
     }
   }
 

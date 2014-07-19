@@ -19,7 +19,8 @@ class BoxDef
     translate(mCenter.x,mCenter.y);
     rotate(-mAngle);
     fill(175);
-    stroke(0);
+    //stroke(0);
+    noStroke();
     rect(0,0,mW,mH);
     popMatrix();
   }
@@ -39,7 +40,7 @@ abstract class PhysicsObject
   // Must be called after mBody is created.
   // also create a BoxDef in mBoxDefs to get drawn automatically by display()
   void makeLongSkinnyBoxFixture( Vec2 startPoint, Vec2 endPoint, float w, float density ) {
-    makeLongSkinnyBoxFixture(startPoint, endPoint, w, density, 0.02, 0.01 );
+    makeLongSkinnyBoxFixture(startPoint, endPoint, w, density, 0.1, 0.01 );
   }
   void makeLongSkinnyBoxFixture( Vec2 startPoint, Vec2 endPoint, float w, float density, float friction, float restitution )
   {
@@ -61,6 +62,7 @@ abstract class PhysicsObject
     fd.friction = friction;
     fd.restitution = restitution;
     mBody.createFixture(fd);
+    println("got box2d "+box2dW+"x"+box2dH+", body mass is "+mBody.getMass());
 
     // create the BoxDef
     BoxDef def = new BoxDef(center, w, length, angle );

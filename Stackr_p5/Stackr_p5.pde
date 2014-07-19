@@ -23,9 +23,11 @@ PhysicsObject mMouseObject;
 
 void setup() {
 
-  size(400,300);
+  size(400,300,OPENGL);
+  smooth(4);
 
-  box2d = new Box2DProcessing(this);
+  float box2dScale = 40; // 100=physically accurate but weird
+  box2d = new Box2DProcessing(this, box2dScale);
   box2d.createWorld();
   box2d.setGravity(0, -10);
 
@@ -124,9 +126,14 @@ void mousePressed()
     float[] widths = { 30, 20, 8 };
     int which = (int)random(0, 2.99999);
     mMouseObject = addCup(mouseX,mouseY,widths[which],heights[which]);
-  } else {
+  } else if ( random(1)>0.2 ) {
     mMouseObject = addPlate(mouseX, mouseY, (random(1)>0.5)?100:60, 5);
     angle = (float)Math.PI*0.45f;
+  } else if ( random(1)>0.5 ) {
+    mMouseObject = addWineglass(mouseX, mouseY, 20, 30, 30, 10);
+  } else {
+    // saucepan
+    mMouseObject = addSaucepan(mouseX, mouseY, 50, 50, 80);
   }
   mMouseGrabber.grab(mouseX,mouseY,mMouseObject.getBody());
   // give a small default rotation
@@ -147,6 +154,20 @@ void mouseDragged()
 Plate addPlate(float x, float y, float w, float depth)
 {
   Plate p = new Plate(x,y,w,depth);
+  mObjects.add(p);
+  return p;
+}
+
+Wineglass addWineglass(float x, float y, float w, float depth, float stemHeight, float baseRadius )
+{
+  Wineglass p = new Wineglass(x,y,w,depth, stemHeight, baseRadius );
+  mObjects.add(p);
+  return p;
+}
+
+Saucepan addSaucepan(float x, float y, float w, float depth, float handleLength)
+{
+  Saucepan p = new Saucepan(x,y,w,depth, handleLength);
   mObjects.add(p);
   return p;
 }
