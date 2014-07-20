@@ -62,7 +62,7 @@ abstract class PhysicsObject
     fd.friction = friction;
     fd.restitution = restitution;
     mBody.createFixture(fd);
-    println("got box2d "+box2dW+"x"+box2dH+", body mass is "+mBody.getMass());
+    // println("got box2d "+box2dW+"x"+box2dH+", body mass is "+mBody.getMass());
 
     // create the BoxDef
     BoxDef def = new BoxDef(center, w, length, angle );
@@ -89,6 +89,10 @@ abstract class PhysicsObject
 
   Body getBody() {
     return mBody;
+  }
+
+  Vec2 getPosition() { 
+    return mBody.getPosition();
   }
 
   void display() {

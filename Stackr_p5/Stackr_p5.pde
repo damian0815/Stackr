@@ -10,9 +10,10 @@ import org.jbox2d.dynamics.joints.*;
 import org.jbox2d.collision.shapes.*;
 import org.jbox2d.common.*;
 import org.jbox2d.dynamics.*;
+import java.awt.event.KeyEvent.*;
 
 // A reference to our box2d world
-Box2DProcessing box2d;
+Box2DWorld box2d;
 
 // A list we'll use to track fixed objects
 ArrayList<Boundary> mBoundaries;
@@ -20,14 +21,15 @@ ArrayList<PhysicsObject> mObjects;
 
 MouseGrabber mMouseGrabber;
 PhysicsObject mMouseObject;
+PickupArea mPickupArea;
 
 void setup() {
 
-  size(400,300,OPENGL);
+  size(400,300);
   smooth(4);
 
   float box2dScale = 40; // 100=physically accurate but weird
-  box2d = new Box2DProcessing(this, box2dScale);
+  box2d = new Box2DWorld( box2dScale, new Vec2(width/2, height/2) );
   box2d.createWorld();
   box2d.setGravity(0, -10);
 
@@ -38,8 +40,11 @@ void setup() {
   mObjects = new ArrayList<PhysicsObject>();
   mBoundaries = new ArrayList<Boundary>();
 
+  // make the pickup area
+  mPickupArea = new PickupArea( 0, 0, width*0.3, height*0.5 );
+  mPickupArea.populate();
+
   // make the dishrack
-  
   makeRack( width*0.5, height*0.8, width*0.5, width*0.05, 14, 12 );
 
   // make world boundaries
@@ -89,6 +94,8 @@ void draw() {
 
   box2d.step(1.0f/60.0f,10,10);
 
+  mPickupArea.display();
+
   for ( Boundary wall: mBoundaries ) {
     wall.display();
   }
@@ -106,13 +113,13 @@ void draw() {
 void keyPressed()
 {
   if ( null != mMouseGrabber ) {
-    if ( keyCode==UP ) {
+    if ( keyCode==UP || key=='w' || key=='W' ) {
       mMouseGrabber.rotate(-0.05);
-    } else if ( keyCode==DOWN ) {
+    } else if ( keyCode==DOWN || key=='s' || key=='S' ) {
       mMouseGrabber.rotate(0.05);
-    } else if ( keyCode==LEFT ) {
+    } else if ( keyCode==LEFT || key=='a' || key=='A' ) {
       mMouseGrabber.rotate((float)Math.PI*0.25);
-    } else if ( keyCode==RIGHT ) {
+    } else if ( keyCode==RIGHT || key=='d' || key=='D'  ) {
       mMouseGrabber.rotate((float)-Math.PI*0.25);
     }
   }
@@ -120,73 +127,45 @@ void keyPressed()
 
 void mousePressed()
 {
-  float angle = 0;
-  if ( random(1)>0.7 ) {
-    float[] heights = { 50, 40, 15 };
-    float[] widths = { 30, 20, 8 };
-    int which = (int)random(0, 2.99999);
-    mMouseObject = addCup(mouseX,mouseY,widths[which],heights[which]);
-  } else if ( random(1)>0.2 ) {
-    mMouseObject = addPlate(mouseX, mouseY, (random(1)>0.5)?100:60, 5);
-    angle = (float)Math.PI*0.45f;
-  } else if ( random(1)>0.5 ) {
-    mMouseObject = addWineglass(mouseX, mouseY, 20, 30, 30, 10);
-  } else {
-    // saucepan
-    mMouseObject = addSaucepan(mouseX, mouseY, 50, 50, 80);
+  if ( mPickupArea.isInside( mouseX, mouseY ) ) {
+    PhysicsObject nearest = mPickupArea.removeNearestObject(mouseX, mouseY);
+    if ( nearest != null ) {
+      mObjects.add(nearest);
+      mMouseObject = nearest;
+      mMouseGrabber.grab(mouseX,mouseY,mMouseObject.getBody());
+    }
   }
-  mMouseGrabber.grab(mouseX,mouseY,mMouseObject.getBody());
-  // give a small default rotation
-  mMouseGrabber.rotate(angle);
 }
 
 void mouseReleased()
 {
-  mMouseGrabber.release();
-  mMouseObject = null;
+  if ( null != mMouseObject ) {
+    // maybe we want to give the object back to the pickup area
+    if ( mPickupArea.isInside(mouseX,mouseY) ) {
+      mObjects.remove(mMouseObject);
+      mPickupArea.giveBackObject(mMouseObject);
+    } else {
+      mPickupArea.populate();
+    }
+    mMouseGrabber.release(); 
+    mMouseObject = null;
+  }
 }
 
 void mouseDragged()
 {
-  mMouseGrabber.update(mouseX,mouseY);
+  if ( null != mMouseObject ) {
+    mMouseGrabber.update(mouseX,mouseY);
+  }
 }
 
-Plate addPlate(float x, float y, float w, float depth)
+void mouseWheel(MouseEvent event)
 {
-  Plate p = new Plate(x,y,w,depth);
-  mObjects.add(p);
-  return p;
-}
+  if ( null != mMouseObject ) {
+    float amount = event.getCount();
+    mMouseGrabber.rotate(amount*0.05);
+  }
 
-Wineglass addWineglass(float x, float y, float w, float depth, float stemHeight, float baseRadius )
-{
-  Wineglass p = new Wineglass(x,y,w,depth, stemHeight, baseRadius );
-  mObjects.add(p);
-  return p;
 }
-
-Saucepan addSaucepan(float x, float y, float w, float depth, float handleLength)
-{
-  Saucepan p = new Saucepan(x,y,w,depth, handleLength);
-  mObjects.add(p);
-  return p;
-}
-
-Cup addCup(float x, float y, float w, float depth)
-{
-  Cup c = new Cup(x,y,w,depth);
-  mObjects.add(c);
-  return c;
-}
-
-Box addBox(float x,float y) {
-  float w = 20;
-  float h = 20;
-  float density = 1.0;
-  Box b = new Box(x,y,w,h,density);
-  mObjects.add(b);
-  return b;
-}
-
 
 
